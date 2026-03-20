@@ -1,0 +1,57 @@
+[project]
+name = "blender-cli"
+version = "0.1.0"
+description = "Agent-friendly procedural map generation SDK built on Blender's Python API"
+keywords = ["blender", "procedural", "map", "3d", "terrain", "generation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+    "Topic :: Games/Entertainment",
+]
+readme = "README.md"
+authors = [{ name = "Julien Blanchon", email = "julien@blanchon.cc" }]
+requires-python = ">=3.13"
+dependencies = [
+    "bpy>=5.1.0",
+    "cma>=3.3",
+    "click>=8.0",
+    "fal-client>=0.7",
+    "matplotlib>=3.8",
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "Pillow>=10.0",
+    "prompt-toolkit>=3.0",
+    "pyrender>=0.1.45",
+    "rtree>=1.2",
+    "scipy>=1.11",
+    "trimesh>=4.0",
+]
+
+[project.scripts]
+blender_cli = "blender_cli.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pyright>=1.1",
+    "trimesh>=4.0",
+    "numpy>=1.24",
+    "rtree>=1.4.1",
+    "fake-bpy-module>=20260220",
+]
+
+[tool.pytest.ini_options]
+markers = ["slow: tests taking >30s (deselect with -m 'not slow')"]
+testpaths = ["tests"]
+
+[tool.pyright]
+# bpy stubs are incomplete — data/types/ops/context are not recognized.
+reportAttributeAccessIssue = "warning"
+
+[build-system]
+requires = ["uv_build>=0.10.5,<0.11.0"]
+build-backend = "uv_build"
