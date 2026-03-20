@@ -11,80 +11,11 @@ For less common utilities, import from submodules directly::
     from blender_cli.types import AddResult
 """
 
-# Scene & entity primitives — the most-used API surface.
-# Alignment
-from blender_cli.alignment import (
-    AlignmentPipelineResult,
-    ComposeOptions,
-    ComposeResult,
-    GenerationOptions,
-    GenerationResult,
-    PoseEstimationOptions,
-    PoseEstimationResult,
-    compose_from_directory,
-    estimate_pose_from_directory,
-    generate_alignment_assets,
-    integrate_pose_result,
-    load_pose_result,
-    run_alignment_pipeline,
-)
+from __future__ import annotations
 
-# Assets
-from blender_cli.assets import Material
-
-# Build
-from blender_cli.build import BuildContext
-
-# Geometry
-from blender_cli.geometry import (
-    WILDCARD,
-    Field2D,
-    Heightfield,
-    Mask,
-    PointSet,
-    Spline,
-    SplineOp,
-)
-
-# Project
-from blender_cli.project import ProjectFile, Session
-
-# Render
-from blender_cli.render import (
-    Camera,
-    CameraKeyframe,
-    CameraPath,
-    RenderContext,
-    focus,
-    still,
-)
-from blender_cli.scene import (
-    Anchor,
-    Entity,
-    Instances,
-    Scene,
-    Selection,
-    SnapSpec,
-    Transform,
-    as_entity,
-    box,
-    cone,
-    cylinder,
-    plane,
-    sphere,
-    torus,
-)
-
-# Blenvy
-from blender_cli.blenvy import apply_bevy_components, to_ron
-from blender_cli.blenvy_registry import BevyRegistry, ComponentInfo
-
-# Snap
-from blender_cli.snap import SnapPolicy
-from blender_cli.snap import snap as snap_points
-
-# Types
-from blender_cli.types import Vec3
+# Lazy imports — heavy dependencies (scipy, cv2, bpy, cma, numpy, etc.)
+# are only loaded when the corresponding name is first accessed.
+# This keeps `blender_cli.cli:main` startup fast for uvx.
 
 __all__ = [
     "WILDCARD",
@@ -149,3 +80,81 @@ __all__ = [
     "to_ron",
     "torus",
 ]
+
+# Map of public name → (module, attribute)
+_LAZY_IMPORTS: dict[str, tuple[str, str]] = {
+    # alignment
+    "AlignmentPipelineResult": ("blender_cli.alignment", "AlignmentPipelineResult"),
+    "ComposeOptions": ("blender_cli.alignment", "ComposeOptions"),
+    "ComposeResult": ("blender_cli.alignment", "ComposeResult"),
+    "GenerationOptions": ("blender_cli.alignment", "GenerationOptions"),
+    "GenerationResult": ("blender_cli.alignment", "GenerationResult"),
+    "PoseEstimationOptions": ("blender_cli.alignment", "PoseEstimationOptions"),
+    "PoseEstimationResult": ("blender_cli.alignment", "PoseEstimationResult"),
+    "compose_from_directory": ("blender_cli.alignment", "compose_from_directory"),
+    "estimate_pose_from_directory": ("blender_cli.alignment", "estimate_pose_from_directory"),
+    "generate_alignment_assets": ("blender_cli.alignment", "generate_alignment_assets"),
+    "integrate_pose_result": ("blender_cli.alignment", "integrate_pose_result"),
+    "load_pose_result": ("blender_cli.alignment", "load_pose_result"),
+    "run_alignment_pipeline": ("blender_cli.alignment", "run_alignment_pipeline"),
+    # assets
+    "Material": ("blender_cli.assets", "Material"),
+    # build
+    "BuildContext": ("blender_cli.build", "BuildContext"),
+    # geometry
+    "WILDCARD": ("blender_cli.geometry", "WILDCARD"),
+    "Field2D": ("blender_cli.geometry", "Field2D"),
+    "Heightfield": ("blender_cli.geometry", "Heightfield"),
+    "Mask": ("blender_cli.geometry", "Mask"),
+    "PointSet": ("blender_cli.geometry", "PointSet"),
+    "Spline": ("blender_cli.geometry", "Spline"),
+    "SplineOp": ("blender_cli.geometry", "SplineOp"),
+    # project
+    "ProjectFile": ("blender_cli.project", "ProjectFile"),
+    "Session": ("blender_cli.project", "Session"),
+    # render
+    "Camera": ("blender_cli.render", "Camera"),
+    "CameraKeyframe": ("blender_cli.render", "CameraKeyframe"),
+    "CameraPath": ("blender_cli.render", "CameraPath"),
+    "RenderContext": ("blender_cli.render", "RenderContext"),
+    "focus": ("blender_cli.render", "focus"),
+    "still": ("blender_cli.render", "still"),
+    # scene
+    "Anchor": ("blender_cli.scene", "Anchor"),
+    "Entity": ("blender_cli.scene", "Entity"),
+    "Instances": ("blender_cli.scene", "Instances"),
+    "Scene": ("blender_cli.scene", "Scene"),
+    "Selection": ("blender_cli.scene", "Selection"),
+    "SnapSpec": ("blender_cli.scene", "SnapSpec"),
+    "Transform": ("blender_cli.scene", "Transform"),
+    "as_entity": ("blender_cli.scene", "as_entity"),
+    "box": ("blender_cli.scene", "box"),
+    "cone": ("blender_cli.scene", "cone"),
+    "cylinder": ("blender_cli.scene", "cylinder"),
+    "plane": ("blender_cli.scene", "plane"),
+    "sphere": ("blender_cli.scene", "sphere"),
+    "torus": ("blender_cli.scene", "torus"),
+    # blenvy
+    "apply_bevy_components": ("blender_cli.blenvy", "apply_bevy_components"),
+    "to_ron": ("blender_cli.blenvy", "to_ron"),
+    "BevyRegistry": ("blender_cli.blenvy_registry", "BevyRegistry"),
+    "ComponentInfo": ("blender_cli.blenvy_registry", "ComponentInfo"),
+    # snap
+    "SnapPolicy": ("blender_cli.snap", "SnapPolicy"),
+    "snap_points": ("blender_cli.snap", "snap"),
+    # types
+    "Vec3": ("blender_cli.types", "Vec3"),
+}
+
+
+def __getattr__(name: str) -> object:
+    if name in _LAZY_IMPORTS:
+        module_path, attr = _LAZY_IMPORTS[name]
+        import importlib
+
+        module = importlib.import_module(module_path)
+        value = getattr(module, attr)
+        # Cache on the module so __getattr__ isn't called again
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module 'blender_cli' has no attribute {name!r}")

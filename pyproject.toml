@@ -1,6 +1,6 @@
 [project]
 name = "blender-cli"
-version = "0.1.1"
+version = "0.1.2"
 description = "Agent-friendly procedural map generation SDK built on Blender's Python API"
 keywords = ["blender", "procedural", "map", "3d", "terrain", "generation"]
 classifiers = [
